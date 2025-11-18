@@ -1,17 +1,21 @@
 package com.mzap.apiservice.web;
 
 import com.mzap.apiservice.client.StorageServiceClient;
+import com.mzap.apiservice.dto.MovieDTO;
+import com.mzap.apiservice.dto.PageResponse;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/movies")
 public class MovieApiController {
     private static final Logger logger = LoggerFactory.getLogger(MovieApiController.class);
+    public static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
 
     private final StorageServiceClient storageServiceClient;
 
@@ -20,8 +24,54 @@ public class MovieApiController {
     }
 
     @GetMapping
-    public String listMovies(@RequestHeader(value = "X-Correlation-ID", required = false) String correlationId) {
+    public PageResponse<MovieDTO> listMovies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
         logger.info("API SERVICE: GET /movies correlationId={}", correlationId);
-        return storageServiceClient.getMoviesRaw();
+
+        return storageServiceClient.getAllMovies(correlationId, page, size);
+    }
+
+    @GetMapping("/{id}")
+    public MovieDTO getMovie(@PathVariable Long id) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        logger.info("API SERVICE: GET /movies/{} correlationId={}", id, correlationId);
+
+        return storageServiceClient.getMovieById(correlationId, id);
+    }
+
+    @PostMapping
+    public ResponseEntity<MovieDTO> createMovie(@Valid @RequestBody MovieDTO movie) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        logger.info("API SERVICE: POST /movies correlationId={}", correlationId);
+        MovieDTO created = storageServiceClient.createMovie(correlationId, movie);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<MovieDTO> updateMovie(
+            @PathVariable Long id,
+            @Valid @RequestBody MovieDTO movie
+    ) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        logger.info("API SERVICE: PUT /movies/{} correlationId={}", id, correlationId);
+        try {
+            MovieDTO updated = storageServiceClient.updateMovie(correlationId, id, movie);
+            return ResponseEntity.ok(updated);
+        } catch (Exception _) {
+            logger.warn("Movie {} not found for update", id);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        logger.info("API SERVICE: DELETE /movies/{} correlationId={}", id, correlationId);
+        storageServiceClient.deleteMovie(correlationId, id);
+        return ResponseEntity.noContent().build();
     }
 }
