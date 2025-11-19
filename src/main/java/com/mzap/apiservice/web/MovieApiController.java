@@ -31,7 +31,7 @@ public class MovieApiController {
         String correlationId = MDC.get(CORRELATION_ID_HEADER);
         logger.info("API SERVICE: GET /movies correlationId={}", correlationId);
 
-        return storageServiceClient.getAllMovies(correlationId, page, size);
+        return storageServiceClient.getMoviesPage(correlationId, page, size);
     }
 
     @GetMapping("/{id}")
@@ -73,5 +73,17 @@ public class MovieApiController {
         logger.info("API SERVICE: DELETE /movies/{} correlationId={}", id, correlationId);
         storageServiceClient.deleteMovie(correlationId, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/dev/chaos")
+    public ResponseEntity<String> chaos(
+            @RequestParam(name = "delay", defaultValue = "0") long delay,
+            @RequestParam(name = "errorRate", defaultValue = "0.0") double errorRate
+    ) {
+        String correlationId = MDC.get(CORRELATION_ID_HEADER);
+        logger.info("API SERVICE: GET /movies/dev/chaos delay={} errorRate={} correlationId={}", delay, errorRate, correlationId);
+
+        String result = storageServiceClient.callChaos(correlationId, delay, errorRate);
+        return ResponseEntity.ok(result);
     }
 }

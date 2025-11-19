@@ -16,7 +16,25 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics
+        include: health, info, metrics, circuitbreakers, circuitbreakerevents
   endpoint:
     health:
       show-details: when_authorized
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      storageService:
+        register-health-indicator: true
+        failure-rate-threshold: 50
+        sliding-window-size: 2
+        sliding-window-type: COUNT_BASED
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      storageService:
+        max-attempts: 3
+        wait-duration: 5s
