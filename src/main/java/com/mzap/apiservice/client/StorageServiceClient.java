@@ -70,6 +70,9 @@ public class StorageServiceClient {
     @CircuitBreaker(name = "storageService", fallbackMethod = "createMovieFallback")
     @Retry(name = "storageService")
     public MovieDTO createMovie(String correlationId, MovieDTO movie) {
+        movie.setId(null);
+        movie.setCreatedAt(null);
+
         return webClient
                 .post()
                 .uri("/movies")

@@ -24,7 +24,8 @@ public class MovieDTO {
     @Max(value = 2100, message = "Release year cannot be higher than 2100")
     private Integer releaseYear;
 
-    public MovieDTO() {}
+    public MovieDTO() {
+    }
 
     public MovieDTO(Long id, LocalDateTime createdAt, String title, String genre, Integer releaseYear) {
         this.id = id;
@@ -44,6 +45,10 @@ public class MovieDTO {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public String getTitle() {

@@ -38,3 +38,7 @@ resilience4j:
       storageService:
         max-attempts: 3
         wait-duration: 5s
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-jwt-secret-dev-jwt-secret-dev-jwt-secret-dev-jwt-secret}
