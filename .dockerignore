@@ -1,0 +1,20 @@
+.git
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+
+# Gradle build outputs and caches
+build/
+.gradle/
+
+# Logs and temp files
+logs/
+tmp/
+*.log
+
+# Node-related (in case of mixed repos)
+node_modules/
+
+# Docker artifacts not needed in context
+docker-compose*.yml
