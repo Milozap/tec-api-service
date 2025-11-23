@@ -32,7 +32,7 @@ USER spring:spring
 EXPOSE 8082
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -f http://localhost:8761/actuator/health || exit 1
+  CMD curl -f http://localhost:8082/actuator/health || exit 1
 
 USER spring
 
