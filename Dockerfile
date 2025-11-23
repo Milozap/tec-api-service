@@ -14,11 +14,16 @@ COPY src src
 
 RUN ./gradlew bootJar --no-daemon
 
+RUN java -Djarmode=layertools -jar build/libs/*.jar extract
+
 FROM eclipse-temurin:25-jre-jammy
 
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/application/ ./
 
 RUN addgroup --system spring && adduser --system spring --ingroup spring && chown -R spring:spring /app
 
@@ -31,4 +36,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 USER spring
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
