@@ -10,20 +10,16 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,6 +31,7 @@ class MovieApiControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
+    @MockitoBean
     private StorageServiceClient storageServiceClient;
 
     @Autowired
@@ -48,7 +45,8 @@ class MovieApiControllerTest {
 
         Mockito.when(storageServiceClient.getMoviesPage(any(), anyInt(), anyInt())).thenReturn(page);
 
-        mockMvc.perform(get("/movies")).andExpect(status().isOk())
+        mockMvc.perform(get("/movies"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].title", is("New Movie")))
                 .andExpect(jsonPath("$.page", is(0)))
@@ -61,7 +59,8 @@ class MovieApiControllerTest {
         MovieDTO movie = new MovieDTO(2L, LocalDateTime.now(), "New Movie", "Genre", 2025);
         Mockito.when(storageServiceClient.getMovieById(any(), eq(2L))).thenReturn(movie);
 
-        mockMvc.perform(get("/movies/2")).andExpect(status().isOk())
+        mockMvc.perform(get("/movies/2"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(2)))
                 .andExpect(jsonPath("$.title", is("New Movie")));
     }
@@ -103,7 +102,9 @@ class MovieApiControllerTest {
     @DisplayName("PUT /movies/{id} returns 404 when service throws")
     void updateMovie_notFound() throws Exception {
         MovieDTO request = new MovieDTO(null, null, "New Movie", "Genre", 2025);
-        Mockito.when(storageServiceClient.updateMovie(any(), eq(404L), any(MovieDTO.class))).thenThrow(new RuntimeException("not found"));
+        Mockito
+                .when(storageServiceClient.updateMovie(any(), eq(404L), any(MovieDTO.class)))
+                .thenThrow(new RuntimeException("not found"));
 
         mockMvc.perform(put("/movies/404")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,12 +131,5 @@ class MovieApiControllerTest {
                         .param("errorRate", "0.5"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("ok"));
-    }
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        StorageServiceClient storageServiceClient() {
-            return Mockito.mock(StorageServiceClient.class);
-        }
     }
 }

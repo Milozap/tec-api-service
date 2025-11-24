@@ -22,7 +22,6 @@ public class PageResponse<T> {
         this.last = last;
     }
 
-    // Getters and Setters
     public List<T> getContent() {
         return content;
     }
