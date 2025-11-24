@@ -28,12 +28,18 @@ public class MovieApiController {
     @GetMapping
     public PageResponse<MovieDTO> listMovies(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer yearFrom,
+            @RequestParam(required = false) Integer yearTo,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDir
     ) {
         String correlationId = MDC.get(CORRELATION_ID_HEADER);
         logger.info("API SERVICE: GET /movies correlationId={}", correlationId);
 
-        return storageServiceClient.getMoviesPage(correlationId, page, size);
+        return storageServiceClient.getMoviesPage(correlationId, page, size, title, genre, yearFrom, yearTo, sortBy, sortDir);
     }
 
     @GetMapping("/{id}")

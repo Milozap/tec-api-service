@@ -43,7 +43,8 @@ class MovieApiControllerTest {
         MovieDTO movie = new MovieDTO(1L, LocalDateTime.now(), "New Movie", "Genre", 2025);
         PageResponse<MovieDTO> page = new PageResponse<>(List.of(movie), 0, 10, 1, 1, true);
 
-        Mockito.when(storageServiceClient.getMoviesPage(any(), anyInt(), anyInt())).thenReturn(page);
+        Mockito.when(storageServiceClient.getMoviesPage(any(), anyInt(), anyInt(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(page);
 
         mockMvc.perform(get("/movies"))
                 .andExpect(status().isOk())
@@ -51,6 +52,35 @@ class MovieApiControllerTest {
                 .andExpect(jsonPath("$.content[0].title", is("New Movie")))
                 .andExpect(jsonPath("$.page", is(0)))
                 .andExpect(jsonPath("$.size", is(10)));
+    }
+
+    @Test
+    @DisplayName("GET /movies supports filtering and sorting params and forwards them to storage client")
+    void listMovies_withFiltersAndSorting() throws Exception {
+        MovieDTO movie = new MovieDTO(10L, LocalDateTime.now(), "New Movie", "Genre", 2025);
+        PageResponse<MovieDTO> page = new PageResponse<>(List.of(movie), 0, 5, 1, 1, true);
+
+        Mockito.when(storageServiceClient.getMoviesPage(any(),
+                        eq(0), eq(5),
+                        eq("Movie"), eq("Genre"),
+                        eq(1990), eq(2025),
+                        eq("title"), eq("desc"))
+                )
+                .thenReturn(page);
+
+        mockMvc.perform(get("/movies")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .param("title", "Movie")
+                        .param("genre", "Genre")
+                        .param("yearFrom", "1990")
+                        .param("yearTo", "2025")
+                        .param("sortBy", "title")
+                        .param("sortDir", "desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].title", is("New Movie")))
+                .andExpect(jsonPath("$.size", is(5)));
     }
 
     @Test

@@ -26,22 +26,58 @@ public class StorageServiceClient {
 
     @CircuitBreaker(name = "storageService", fallbackMethod = "getMoviesPageFallback")
     @Retry(name = "storageService")
-    public PageResponse<MovieDTO> getMoviesPage(String correlationId, int page, int size) {
+    public PageResponse<MovieDTO> getMoviesPage(
+            String correlationId,
+            int page,
+            int size,
+            String title,
+            String genre,
+            Integer yearFrom,
+            Integer yearTo,
+            String sortBy,
+            String sortDir
+    ) {
         return webClient
                 .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/movies")
-                        .queryParam("page", page)
-                        .queryParam("size", size)
-                        .build()
-                )
+                .uri(uriBuilder -> {
+                    var uri = uriBuilder.path("/movies")
+                            .queryParam("page", page)
+                            .queryParam("size", size);
+                    if (title != null && !title.isBlank()) {
+                        uri.queryParam("title", title);
+                    }
+                    if (genre != null && !genre.isBlank()) {
+                        uri.queryParam("genre", genre);
+                    }
+                    if (yearFrom != null) {
+                        uri.queryParam("yearFrom", yearFrom);
+                    }
+                    if (yearTo != null) {
+                        uri.queryParam("yearTo", yearTo);
+                    }
+                    if (sortBy != null && !sortBy.isBlank() && sortDir != null && !sortDir.isBlank()) {
+                        uri.queryParam("sort", sortBy + ',' + sortDir);
+                    }
+                    return uri.build();
+                })
                 .header(CORRELATION_ID_HEADER, correlationId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<PageResponse<MovieDTO>>() {})
                 .block();
     }
 
-    public PageResponse<MovieDTO> getMoviesPageFallback(String correlationId, int page, int size, Exception exception) {
+    public PageResponse<MovieDTO> getMoviesPageFallback(
+            String correlationId,
+            int page,
+            int size,
+            String title,
+            String genre,
+            Integer yearFrom,
+            Integer yearTo,
+            String sortBy,
+            String sortDir,
+            Exception exception
+    ) {
         logger.warn("Fallback for getMoviesPage triggered with correlationId: {}, page: {}, size: {} and exception: {}",
                 correlationId, page, size, exception.getMessage());
 
